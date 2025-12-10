@@ -1,0 +1,1 @@
+A small experimental LLM-powered agent written in Python that can read, modify, and execute Python code from the command line using the Google Gemini API.
