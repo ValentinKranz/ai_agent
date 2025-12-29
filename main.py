@@ -3,6 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 def main():
     # Create a command-line argument parser and define a required positional argument for the user prompt
@@ -12,6 +13,10 @@ def main():
         type=str,
         help="Prompt to send to Gemini"
     )
+    parser.add_argument(
+        "--verbose", 
+        action="store_true", 
+        help="Enable verbose output")
     args = parser.parse_args() # Parse command-line arguments
 
     # Load environment variables from a .env file (if present)
@@ -23,19 +28,22 @@ def main():
     # Initialize the Gemini API client
     client = genai.Client(api_key=api_key)
 
+    # List of messages in the conversation
+    messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
+
     # Send the user's prompt to the Gemini model and generate a response
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents=args.user_prompt,
+        contents=messages
     )
 
-    # Validate that the response contains usage metadata
-    if not response.usage_metadata:
-        raise RuntimeError("Gemini API response appears to be malformed")
+    # Verbose output
+    if args.verbose:
+        print(f"User prompt: {args.user_prompt}")
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
-    # Print token usage statistics and the generated response text
-    print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-    print("Response tokens:", response.usage_metadata.candidates_token_count)
+    # Always print response text
     print("Response:")
     print(response.text)
 
