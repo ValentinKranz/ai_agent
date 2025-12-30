@@ -1,4 +1,3 @@
-# in `test_get_files_info.py`
 from functions.get_files_info import get_files_info
 
 print("Result for current directory:")
