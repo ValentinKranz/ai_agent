@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from prompts import system_prompt
+
 def main():
     # Create a command-line argument parser and define a required positional argument for the user prompt
     parser = argparse.ArgumentParser(description="AI Code Assistant")
@@ -34,7 +36,8 @@ def main():
     # Send the user's prompt to the Gemini model and generate a response
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents=messages
+        contents=messages,
+        config=types.GenerateContentConfig(system_instruction=system_prompt)
     )
 
     # Verbose output
