@@ -7,6 +7,8 @@ from google.genai import types
 
 from prompts import system_prompt
 
+from call_function import available_functions
+
 def main():
     # Create a command-line argument parser and define a required positional argument for the user prompt
     parser = argparse.ArgumentParser(description="AI Code Assistant")
@@ -37,7 +39,7 @@ def main():
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=messages,
-        config=types.GenerateContentConfig(system_instruction=system_prompt)
+        config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt)
     )
 
     # Verbose output
@@ -46,9 +48,16 @@ def main():
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
-    # Always print response text
-    print("Response:")
-    print(response.text)
+    # Output: function calls OR text
+    function_calls = getattr(response, "function_calls", None)
+
+    if function_calls:  # function_calls is a list when present, otherwise None/empty
+        print("Response (function calls):")
+        for function_call in function_calls:
+            print(f"Calling function: {function_call.name}({function_call.args})")
+    else:
+        print("Response:")
+        print(response.text)
 
 if __name__ == "__main__":
 # Only run main() when this file is executed directly, not when it is imported as a module
