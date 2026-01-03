@@ -7,7 +7,7 @@ from google.genai import types
 
 from prompts import system_prompt
 
-from call_function import available_functions
+from call_function import available_functions, call_function
 
 def main():
     # Create a command-line argument parser and define a required positional argument for the user prompt
@@ -52,9 +52,23 @@ def main():
     function_calls = getattr(response, "function_calls", None)
 
     if function_calls:  # function_calls is a list when present, otherwise None/empty
-        print("Response (function calls):")
-        for function_call in function_calls:
-            print(f"Calling function: {function_call.name}({function_call.args})")
+        function_results = []
+        for function_call_obj in function_calls:
+            function_call_result = call_function(function_call_obj, verbose=args.verbose)
+            if not function_call_result.parts:
+                raise RuntimeError("Function call result had no parts")
+            function_response = function_call_result.parts[0].function_response
+            if function_response is None:
+                raise RuntimeError("Function call result had no function_response")
+            tool_response = function_response.response
+            if tool_response is None:
+                raise RuntimeError("Function call result had no response")
+            function_results.append(function_call_result.parts[0])
+            if args.verbose:
+                print(f"-> {tool_response}")
+            if not args.verbose:
+                for part in function_results:
+                    print(part.function_response.response)
     else:
         print("Response:")
         print(response.text)
